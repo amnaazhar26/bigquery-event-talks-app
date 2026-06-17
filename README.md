@@ -6,7 +6,9 @@ A modern, responsive web application that fetches and displays the latest releas
 
 - **Dynamic Feed Integration:** Automatically fetches the latest updates directly from the official Google Cloud BigQuery XML feed.
 - **Modern User Interface:** Features a clean, responsive design with smooth skeleton loading states for a premium user experience.
-- **Twitter Integration:** Easily share specific updates with a "Tweet this Update" button that pre-fills a tweet with the update's summary and a link.
+- **Theme Customization:** Toggle between sleek Dark Mode and a highly readable Light Mode with a single click.
+- **Data Export:** Easily export the entire list of release notes to a standard CSV file for external reporting or analysis.
+- **Quick Sharing:** Share updates instantly using the "Tweet this Update" button, or use the one-click "Copy to Clipboard" utility to paste summaries anywhere.
 - **Manual Refresh:** Pull the absolute latest updates without having to reload the entire web page.
 
 ## 🛠️ Technology Stack
