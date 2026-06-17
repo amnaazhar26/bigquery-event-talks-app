@@ -3,12 +3,21 @@
     --bg-card: rgba(30, 41, 59, 0.7);
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
     --accent: #3b82f6;
     --accent-hover: #2563eb;
     --gradient-1: #3b82f6;
     --gradient-2: #8b5cf6;
     --twitter-blue: #1DA1F2;
     --twitter-hover: #1a91da;
+}
+
+[data-theme="light"] {
+    --bg-dark: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(0, 0, 0, 0.1);
 }
 
 * {

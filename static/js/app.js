@@ -1,11 +1,70 @@
 document.addEventListener('DOMContentLoaded', () => {
     const refreshBtn = document.getElementById('refresh-btn');
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const notesContainer = document.getElementById('notes-container');
+
+    let currentNotes = [];
+
+    // Theme toggle
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
 
     // Initial fetch
     fetchNotes();
 
     refreshBtn.addEventListener('click', fetchNotes);
+
+    exportCsvBtn.addEventListener('click', () => {
+        if (currentNotes.length === 0) {
+            alert("No notes available to export.");
+            return;
+        }
+
+        const headers = ['Title', 'Date', 'Link', 'Content Snippet'];
+        const csvRows = [headers.join(',')];
+
+        currentNotes.forEach(note => {
+            const date = new Date(note.updated).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = note.content;
+            let plainText = tempDiv.textContent || tempDiv.innerText || "";
+            plainText = plainText.replace(/\s+/g, ' ').trim();
+            
+            const row = [
+                `"${note.title.replace(/"/g, '""')}"`,
+                `"${date}"`,
+                `"${note.link}"`,
+                `"${plainText.replace(/"/g, '""')}"`
+            ];
+            csvRows.push(row.join(','));
+        });
+
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'bigquery_release_notes.csv');
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
 
     async function fetchNotes() {
         setLoading(true);
@@ -15,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/notes');
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
+            currentNotes = data;
             renderNotes(data);
         } catch (error) {
             console.error('Error fetching notes:', error);
@@ -89,15 +149,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="note-content">
                     ${note.content}
                 </div>
-                <div class="note-actions">
+                <div class="note-actions" style="gap: 10px; display: flex; flex-wrap: wrap;">
                     <a href="${twitterIntentUrl}" target="_blank" rel="noopener noreferrer" class="btn tweet-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px;">
                             <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                         </svg>
                         Tweet this Update
                     </a>
+                    <button class="btn copy-btn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span class="copy-text">Copy</span>
+                    </button>
                 </div>
             `;
+            
+            const copyBtn = card.querySelector('.copy-btn');
+            copyBtn.addEventListener('click', async () => {
+                const textToCopy = `BigQuery Update: ${note.title}\n\n${plainText}\n\nLink: ${note.link}`;
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    const btnText = copyBtn.querySelector('.copy-text');
+                    const originalText = btnText.innerText;
+                    btnText.innerText = 'Copied!';
+                    setTimeout(() => btnText.innerText = originalText, 2000);
+                } catch (err) {
+                    console.error('Failed to copy!', err);
+                }
+            });
+            
             notesContainer.appendChild(card);
         });
     }
